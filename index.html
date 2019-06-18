@@ -1,0 +1,159 @@
+﻿
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>edit(带图片上传)富文本编辑器</title>
+<link rel="stylesheet" href="assets/design/css/trumbowyg.css">
+    <link rel="stylesheet" href="assets/design/css/fabiao.css">
+<script src="assets/jquery.min.js"></script>
+<script src="assets/trumbowyg.js"></script>
+<script src="assets/plugins/base64/trumbowyg.base64.js"></script>
+    <!--<script charset="utf-8" src="assets/kindeditor-min.js"></script>-->
+
+
+</head>
+
+<body>
+
+<form  id="add" method="post" enctype="multipart/form-data">
+ <div class="neirong">
+     <h >标题:</h>
+  <input  id="title" placeholder="取一个标题" style=" margin-top:20px;height:20px;width:300px"/><br><br>
+
+     <h>分类:</h>
+     <input id="category" placeholder="分类" style=" height:20px;width:300px"/><br>
+</div>
+
+<h >图片:</h>
+<div id="preview" style="margin-left: 60px;">
+    <img id="imghead" />
+    <section style="float: left;margin-top: 60px;">
+        <a style="color: #f48b0e;font-size: 14px">1、图片尽量清晰</a><br />
+        <a style="color: #f48b0e;font-size: 14px">2、图片尺寸不小于400*400</a><br />
+        <a style="color: #f48b0e;font-size: 14px">3、大小不超过500K</a>
+    </section>
+</div>
+<section style="float: left;margin-top: -200px;margin-left: 30%;">
+    <input type="file" onchange="previewImage(this)" id="upload" name="file"/>
+
+    <section id="submit">
+        <a id="up" >上传图片</a>
+    </section>
+
+</section>
+
+
+<div id="odiv" style="display:none;position:absolute;z-index:100;">
+    <img src="assets/pic/sx.png" title="缩小" border="0" alt="缩小" onclick="sub(-1);"/>
+    <img src="assets/pic/fd.png" title="放大" border="0" alt="放大" onclick="sub(1)"/>
+    <img src="assets/pic/cz.png" title="重置" border="0" alt="重置" onclick="sub(0)"/>
+    <img src="assets/pic/sc.png" title="删除" border="0" alt="删除" onclick="del();odiv.style.display='none';"/>
+</div>
+      <button class="button-main" id="btn_get">发表</button>
+        <div  onmousedown="show_element(event)" style="clear:both" id="customized-buttonpane" class="editor"></div>
+</form>
+<script>
+    $(document).ready(function() {
+
+        $("#btn_get").click(function () {
+           // alert($("#up").name);
+
+                if($(".editor").html().replace(/^ +| +$/g,'')==''){
+                    alert('不能为空!')
+                }
+
+            var title=$("#title").val()   //标题
+            var category=$("#category").val() //类别
+            var content=$(".editor").html()  //内容
+
+//            alert(title)
+//            alert(category)
+//            alert(content)
+
+           // var json=JSON.stringify(user)
+            $.ajax({
+                url:"/article/add/"+title+"/"+category+"/"+content,
+                type:"POST",
+                data:json,
+                contentType:"application/json",
+                statusCode: {
+                    200:function () {
+                        alert("增加成功")
+                    }
+                }
+            })
+
+
+        });
+    });
+
+</script>
+
+
+<script type="text/javascript">
+    function previewImage(file) {
+        var MAXWIDTH = 200;
+        var MAXHEIGHT = 200;
+        var div = document.getElementById('preview');
+        if (file.files && file.files[0]) {
+            div.innerHTML = '<img id=imghead>';
+            var img = document.getElementById('imghead');
+            img.onload = function() {
+                var rect = clacImgZoomParam(MAXWIDTH, MAXHEIGHT, img.offsetWidth, img.offsetHeight);
+                img.width = rect.width;
+                img.height = rect.height;
+                //                 img.style.marginLeft = rect.left+'px';
+                img.style.marginTop = rect.top + 'px';
+            }
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                img.src = evt.target.result;
+            }
+            reader.readAsDataURL(file.files[0]);
+        } else //兼容IE
+        {
+            var sFilter = 'filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale,src="';
+            file.select();
+            var src = document.selection.createRange().text;
+            div.innerHTML = '<img id=imghead>';
+            var img = document.getElementById('imghead');
+            img.filters.item('DXImageTransform.Microsoft.AlphaImageLoader').src = src;
+            var rect = clacImgZoomParam(MAXWIDTH, MAXHEIGHT, img.offsetWidth, img.offsetHeight);
+            status = ('rect:' + rect.top + ',' + rect.left + ',' + rect.width + ',' + rect.height);
+            div.innerHTML = "<div id=divhead style='width:" + rect.width + "px;height:" + rect.height + "px;margin-top:" + rect.top + "px;" + sFilter + src + "\"'></div>";
+        }
+    }
+
+    function clacImgZoomParam(maxWidth, maxHeight, width, height) {
+        var param = {
+            top: 0,
+            left: 0,
+            width: width,
+            height: height
+        };
+        if (width > maxWidth || height > maxHeight) {
+            rateWidth = width / maxWidth;
+            rateHeight = height / maxHeight;
+            if (rateWidth > rateHeight) {
+                param.width = maxWidth;
+                param.height = Math.round(height / rateWidth);
+            } else {
+                param.width = Math.round(width / rateHeight);
+                param.height = maxHeight;
+            }
+        }
+        param.left = Math.round((maxWidth - param.width) / 2);
+        param.top = Math.round((maxHeight - param.height) / 2);
+
+        return param;
+    }
+    $(function() {
+        $('#edit').editable({
+            inlineMode: false,
+            alwaysBlank: true
+        })
+    });
+</script>
+
+</body>
